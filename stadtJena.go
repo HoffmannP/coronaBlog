@@ -11,47 +11,7 @@ import (
 	"github.com/goodsign/monday"
 )
 
-const defaultStatus = "Für Jena liegen aktuell keine Meldungen über Erkrankungen vor. "
-
-func stadtJena(filename string) {
-	s.load(filename)
-	c := colly.NewCollector()
-	c.OnHTML(".content-inner--main > div > div:first-child > .paragraph--type--text > .text-formatted:first-child", stadtNeuigkeiten)
-	c.Visit("http://jena.de/corona")
-	s.save()
-}
-
-func stadtNeuigkeiten(h *colly.HTMLElement) {
-	var statusElement, standElement *goquery.Selection
-	h.DOM.Find("p").Each(func(i int, s *goquery.Selection) {
-		if strings.Contains(s.Text(), "Für Jena ") {
-			statusElement = s
-		}
-		if strings.Contains(s.Text(), "Stand: ") {
-			standElement = s
-		}
-	})
-	if (statusElement == nil) || (standElement == nil) {
-		html, _ := h.DOM.Html()
-		fmt.Printf("Kann '%s' nicht auslesen\n", html)
-		return
-	}
-	statusInfo := getStatus(statusElement)
-	count := getCount(statusElement)
-	timestamp := getTimestamp(standElement)
-	zeitpunkt := monday.Format(timestamp, "2. January 15:04 Uhr", "de_DE")
-
-	if s.count == 0 && statusInfo != defaultStatus {
-		sendSignal("*WARNUNG - CORONA FALL* (%s)\n%s", zeitpunkt, statusInfo)
-		s.count = 1
-	} else if count > s.count {
-		sendSignal("*Statusänderung* (%s)\nGestiegen von %d auf %d\n%s", zeitpunkt, s.count, count, statusInfo)
-		s.count = count
-	} else if timestamp.Unix() > s.timestamp {
-		sendSignal("Aktualisierung vom %s\n%s", zeitpunkt, statusInfo)
-		s.timestamp = timestamp.Unix()
-	}
-}
+const defaultStatus = "Für Jena liegen aktuell keine Meldungen über Erkrankungen vor."
 
 func getStatus(s *goquery.Selection) string {
 	html, err := s.Children().First().Html()
@@ -59,7 +19,7 @@ func getStatus(s *goquery.Selection) string {
 		fmt.Println(err)
 		return ""
 	}
-	return textize(html)
+	return strings.Trim(textize(html), " ")
 }
 
 func getCount(s *goquery.Selection) int {
@@ -79,4 +39,42 @@ func getTimestamp(s *goquery.Selection) time.Time {
 	}
 	return ts
 
+}
+
+func stadtNeuigkeiten(s *status, h *colly.HTMLElement) {
+	var statusElement, standElement *goquery.Selection
+	h.DOM.Find("p").Each(func(i int, s *goquery.Selection) {
+		if strings.Contains(s.Text(), "Für Jena ") {
+			statusElement = s
+		}
+		if strings.Contains(s.Text(), "Stand: ") {
+			standElement = s
+		}
+	})
+	if (statusElement == nil) || (standElement == nil) {
+		html, _ := h.DOM.Html()
+		fmt.Printf("Kann '%s' nicht auslesen\n", html)
+		return
+	}
+	statusInfo := getStatus(statusElement)
+	count := getCount(statusElement)
+	timestamp := getTimestamp(standElement)
+	zeitpunkt := monday.Format(timestamp, "2. January 15:04 Uhr", "de_DE")
+
+	if s.Count == 0 && statusInfo != defaultStatus {
+		sendSignal("%s WARNUNG - CORONA FALL\n%s", zeitpunkt, statusInfo)
+		s.Count = 1
+	} else if count > s.Count {
+		sendSignal("%s Stadt Statusänderung\nGestiegen von %d auf %d\n%s", zeitpunkt, s.Count, count, statusInfo)
+		s.Count = count
+	} else if timestamp.Unix() > s.Timestamp {
+		sendSignal("%s Stadt Aktualisierung\n%s", zeitpunkt, statusInfo)
+		s.Timestamp = timestamp.Unix()
+	}
+}
+
+func stadtJena(s *status) {
+	c := colly.NewCollector()
+	c.OnHTML(".content-inner--main > div > div:first-child > .paragraph--type--text > .text-formatted:first-child", func(h *colly.HTMLElement) { stadtNeuigkeiten(s, h) })
+	c.Visit("http://jena.de/corona")
 }

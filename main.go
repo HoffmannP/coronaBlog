@@ -2,14 +2,11 @@ package main
 
 import (
 	"fmt"
-	"os/exec"
 	"strings"
 )
 
-const fromUser = "+493641945284"
-const toUser = "+491715761382"
-
-var s status
+var fromUser string
+var toUser string
 
 func textize(input string) (output string) {
 	output = strings.ReplaceAll(input, "<strong>", "")
@@ -18,13 +15,18 @@ func textize(input string) (output string) {
 }
 
 func sendSignal(format string, a ...interface{}) {
-	err := exec.Command("/usr/local/bin/signal-cli", "-u", fromUser, "send", "-m", fmt.Sprintf(format, a...), toUser).Run()
+	// err := exec.Command("/usr/local/bin/signal-cli", "-u", fromUser, "send", "-m", fmt.Sprintf(format, a...), toUser).Run()
+	_, err := fmt.Println("/usr/local/bin/signal-cli", "-u", fromUser, "send", "-m", fmt.Sprintf(format, a...), toUser)
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
 func main() {
-	stadtJena("/home/ber/bin/.coronaStadt")
-	otzBlog("/home/ber/bin/.coronaOtz")
+	setSignalUsers()
+	s := load("/home/ber/bin/corona")
+	stadtJena(&s.Stadt)
+	otzBlogThueringen(&s.OtzThueringen)
+	otzBlogWeltweit(&s.OtzWeltweit)
+	s.save()
 }

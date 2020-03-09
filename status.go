@@ -1,40 +1,47 @@
 package main
 
 import (
-	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"strconv"
 )
 
-type status struct {
-	filename  string
-	timestamp int64
-	count     int
+type stati struct {
+	f             string
+	Stadt         status
+	OtzThueringen status
+	OtzWeltweit   status
 }
 
-func (s *status) load(filename string) {
-	s.filename = filename
-	content, err := ioutil.ReadFile(s.filename)
+type status struct {
+	Timestamp int64
+	Count     int
+}
+
+func load(f string) (si stati) {
+	si.f = f
+	j, err := ioutil.ReadFile(f)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	lines := bytes.Split(content, []byte("\n"))
-	s.timestamp, err = strconv.ParseInt(string(lines[0]), 10, 64)
+	err = json.Unmarshal(j, &si)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
-	count, err := strconv.ParseInt(string(lines[1]), 10, 0)
-	if err != nil {
-		fmt.Println(err)
-	}
-	s.count = int(count)
+	return
 }
 
-func (s *status) save() {
-	err := ioutil.WriteFile(s.filename, []byte(fmt.Sprintf("%d\n%d", s.timestamp, s.count)), 0644)
+func (si stati) save() {
+	j, err := json.Marshal(si)
 	if err != nil {
 		fmt.Println(err)
+		return
+	}
+	err = ioutil.WriteFile(si.f, j, 0644)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 }

@@ -1,0 +1,6 @@
+package main
+
+func setSignalUsers() {
+    fromUser = "{registered signal phone number from}"
+    toUser = "{registered signal phone number from}"
+}
