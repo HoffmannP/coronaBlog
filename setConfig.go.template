@@ -1,6 +1,7 @@
 package main
 
-func setSignalUsers() {
+func setConfig() {
     fromUser = "{registered signal phone number from}"
     toUser = "{registered signal phone number from}"
+    saveUser = "{path of status file (timestamps)"
 }
