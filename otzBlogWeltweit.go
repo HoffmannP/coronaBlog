@@ -47,8 +47,8 @@ func ladeBlogWW(lastUpdate *int64, p *parseStateWW, i int, e *goquery.Selection)
 			p.textCurrentEntry += " " + rawText
 			return true
 		}
-		if *lastUpdate >= p.timeCurrentEntry.Unix() {
-			// fmt.Println(p.timeCurrentEntry, "ist keine Neuigkeit")
+		if *lastUpdate >= p.timeCurrentEntry.Unix() && p.f {
+			// fmt.Println(p.timeCurrentEntry, "ist keine Neuigkeit gegenüber", *lastUpdate)
 			return false
 		}
 		if p.timeCurrentEntry.Unix() > p.newestEntry {
@@ -65,6 +65,7 @@ func ladeBlogWW(lastUpdate *int64, p *parseStateWW, i int, e *goquery.Selection)
 			tt.Hour(), tt.Minute(), 0, 0,
 			p.timeCurrentEntry.Location())
 		p.textCurrentEntry = strings.Trim(rawText[9:], ".: \n")
+		// fmt.Println(len(p.entries))
 		return true
 	}
 	fmt.Println(goquery.NodeName(e))
@@ -73,7 +74,7 @@ func ladeBlogWW(lastUpdate *int64, p *parseStateWW, i int, e *goquery.Selection)
 
 func otzBlogWeltweit(lastUpdate *int64) {
 	today := time.Date(
-		2020, time.Now().Month(), time.Now().Day(),
+		time.Now().Year(), time.Now().Month(), time.Now().Day(),
 		0, 0, 0, 0,
 		time.Now().Location())
 	p := parseStateWW{n: "Weltweit", timeCurrentEntry: today}
