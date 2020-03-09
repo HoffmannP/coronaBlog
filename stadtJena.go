@@ -22,13 +22,13 @@ func getStatus(s *goquery.Selection) string {
 	return strings.Trim(textize(html), " ")
 }
 
-func getCount(s *goquery.Selection) int {
+func getCount(s *goquery.Selection) int64 {
 	number := s.Find("strong").Text()
 	count, err := strconv.ParseInt(number, 10, 0)
 	if err != nil && number != "keine " {
 		fmt.Println(err)
 	}
-	return int(count)
+	return count
 }
 
 func getTimestamp(s *goquery.Selection) time.Time {
@@ -41,7 +41,7 @@ func getTimestamp(s *goquery.Selection) time.Time {
 
 }
 
-func stadtNeuigkeiten(s *status, h *colly.HTMLElement) {
+func stadtNeuigkeiten(lastUpdate, lastCount *int64, h *colly.HTMLElement) {
 	var statusElement, standElement *goquery.Selection
 	h.DOM.Find("p").Each(func(i int, s *goquery.Selection) {
 		if strings.Contains(s.Text(), "Für Jena ") {
@@ -61,20 +61,20 @@ func stadtNeuigkeiten(s *status, h *colly.HTMLElement) {
 	timestamp := getTimestamp(standElement)
 	zeitpunkt := monday.Format(timestamp, "2. January 15:04 Uhr", "de_DE")
 
-	if s.Count == 0 && statusInfo != defaultStatus {
+	if *lastCount == 0 && statusInfo != defaultStatus {
 		sendSignal("%s WARNUNG - CORONA FALL\n%s", zeitpunkt, statusInfo)
-		s.Count = 1
-	} else if count > s.Count {
-		sendSignal("%s Stadt Statusänderung\nGestiegen von %d auf %d\n%s", zeitpunkt, s.Count, count, statusInfo)
-		s.Count = count
-	} else if timestamp.Unix() > s.Timestamp {
+		*lastCount = 1
+	} else if count > *lastCount {
+		sendSignal("%s Stadt Statusänderung\nGestiegen von %d auf %d\n%s", zeitpunkt, lastCount, count, statusInfo)
+		*lastCount = count
+	} else if timestamp.Unix() > *lastUpdate {
 		sendSignal("%s Stadt Aktualisierung\n%s", zeitpunkt, statusInfo)
-		s.Timestamp = timestamp.Unix()
+		*lastUpdate = timestamp.Unix()
 	}
 }
 
-func stadtJena(s *status) {
+func stadtJena(lastUpdate, lastCount *int64) {
 	c := colly.NewCollector()
-	c.OnHTML(".content-inner--main > div > div:first-child > .paragraph--type--text > .text-formatted:first-child", func(h *colly.HTMLElement) { stadtNeuigkeiten(s, h) })
+	c.OnHTML(".content-inner--main > div > div:first-child > .paragraph--type--text > .text-formatted:first-child", func(h *colly.HTMLElement) { stadtNeuigkeiten(lastUpdate, lastCount, h) })
 	c.Visit("http://jena.de/corona")
 }

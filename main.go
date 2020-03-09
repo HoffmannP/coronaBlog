@@ -27,7 +27,7 @@ func sendSignal(format string, a ...interface{}) {
 func main() {
 	setConfig()
 	s := load(saveFile)
-	stadtJena(&s.Stadt)
+	stadtJena(&s.Stadt, &s.StadtCount)
 	otzBlogThueringen(&s.OtzThueringen)
 	otzBlogWeltweit(&s.OtzWeltweit)
 	s.save()

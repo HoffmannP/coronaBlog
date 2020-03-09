@@ -11,7 +11,6 @@ import (
 )
 
 type parseStateTH struct {
-	s                *status
 	n                string
 	newestEntry      int64
 	timeCurrentEntry time.Time
@@ -20,14 +19,14 @@ type parseStateTH struct {
 	entries          []string
 }
 
-func ladeBlogTH(l int64, p *parseStateTH, i int, e *goquery.Selection) bool {
+func ladeBlogTH(lastUpdate *int64, p *parseStateTH, i int, e *goquery.Selection) bool {
 	// fmt.Println(i, p.level, goquery.NodeName(e))
 	textContent := strings.Trim(e.Text(), " ")
 	switch goquery.NodeName(e) {
 	case "h2":
 		switch p.level {
 		case 3:
-			if l >= p.timeCurrentEntry.Unix() {
+			if *lastUpdate >= p.timeCurrentEntry.Unix() {
 				return false
 			}
 			if p.timeCurrentEntry.Unix() > p.newestEntry {
@@ -99,13 +98,13 @@ func ladeBlogTH(l int64, p *parseStateTH, i int, e *goquery.Selection) bool {
 	panic("Should never get here")
 }
 
-func otzBlogThueringen(s *status) {
-	p := parseStateTH{s: s, n: "Thüringen"}
+func otzBlogThueringen(lastUpdate *int64) {
+	p := parseStateTH{n: "Thüringen"}
 	c := colly.NewCollector()
 	c.OnHTML("body", func(e *colly.HTMLElement) {
-		e.DOM.Find("h2, .article__paragraph").EachWithBreak(func(i int, e *goquery.Selection) bool { return ladeBlogTH(s.Timestamp, &p, i, e) })
-		if p.newestEntry > s.Timestamp {
-			s.Timestamp = p.newestEntry
+		e.DOM.Find("h2, .article__paragraph").EachWithBreak(func(i int, e *goquery.Selection) bool { return ladeBlogTH(lastUpdate, &p, i, e) })
+		if p.newestEntry > *lastUpdate {
+			*lastUpdate = p.newestEntry
 		}
 		for i := range p.entries {
 			sendSignal(p.entries[len(p.entries)-i-1])

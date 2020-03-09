@@ -12,7 +12,6 @@ import (
 
 type parseStateWW struct {
 	f                bool
-	s                *status
 	n                string
 	newestEntry      int64
 	timeCurrentEntry time.Time
@@ -20,7 +19,7 @@ type parseStateWW struct {
 	entries          []string
 }
 
-func ladeBlogWW(l int64, p *parseStateWW, i int, e *goquery.Selection) bool {
+func ladeBlogWW(lastUpdate *int64, p *parseStateWW, i int, e *goquery.Selection) bool {
 	switch goquery.NodeName(e) {
 	case "h2":
 		ueberschriftDatum := strings.Trim(strings.SplitN(e.Text(), ": ", 2)[0], " ")
@@ -48,7 +47,7 @@ func ladeBlogWW(l int64, p *parseStateWW, i int, e *goquery.Selection) bool {
 			p.textCurrentEntry += " " + rawText
 			return true
 		}
-		if l >= p.timeCurrentEntry.Unix() {
+		if *lastUpdate >= p.timeCurrentEntry.Unix() {
 			// fmt.Println(p.timeCurrentEntry, "ist keine Neuigkeit")
 			return false
 		}
@@ -72,17 +71,17 @@ func ladeBlogWW(l int64, p *parseStateWW, i int, e *goquery.Selection) bool {
 	panic("Irgendwas anderes")
 }
 
-func otzBlogWeltweit(s *status) {
+func otzBlogWeltweit(lastUpdate *int64) {
 	today := time.Date(
 		2020, time.Now().Month(), time.Now().Day(),
 		0, 0, 0, 0,
 		time.Now().Location())
-	p := parseStateWW{s: s, n: "Weltweit", timeCurrentEntry: today}
+	p := parseStateWW{n: "Weltweit", timeCurrentEntry: today}
 	c := colly.NewCollector()
 	c.OnHTML("body", func(e *colly.HTMLElement) {
-		e.DOM.Find("h2, .article__paragraph").EachWithBreak(func(i int, e *goquery.Selection) bool { return ladeBlogWW(s.Timestamp, &p, i, e) })
-		if p.newestEntry > s.Timestamp {
-			s.Timestamp = p.newestEntry
+		e.DOM.Find("h2, .article__paragraph").EachWithBreak(func(i int, e *goquery.Selection) bool { return ladeBlogWW(lastUpdate, &p, i, e) })
+		if p.newestEntry > *lastUpdate {
+			*lastUpdate = p.newestEntry
 		}
 		for i := range p.entries {
 			sendSignal(p.entries[len(p.entries)-i-1])
