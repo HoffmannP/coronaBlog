@@ -33,6 +33,7 @@ func ladeBlogWW(lastUpdate *int64, p *parseStateWW, i int, e *goquery.Selection)
 		strong := strings.SplitN(e.Find("strong").First().Text(), "Uhr", 2)
 		if len(strong) == 1 {
 			p.textCurrentEntry += " " + rawText
+			// fmt.Println(e.Find("strong").First().Text(), "enthält keine Uhrzeit")
 			return true
 		}
 		strongText := strings.Trim(strong[0], " \n")
