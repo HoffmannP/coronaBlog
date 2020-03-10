@@ -34,7 +34,7 @@ func ladeBlogTH(lastUpdate *int64, p *parseStateTH, i int, e *goquery.Selection)
 			}
 			zeitpunkt := monday.Format(p.timeCurrentEntry, "2. January 15:04 Uhr", "de_DE")
 			// fmt.Printf("%s\n%s\n\n", zeitpunkt, p.textCurrentEntry)
-			p.entries = append(p.entries, fmt.Sprintf("%s\n%s", zeitpunkt, p.textCurrentEntry))
+			p.entries = append(p.entries, fmt.Sprintf("%s - OTZ TH\n%s", zeitpunkt, p.textCurrentEntry))
 			p.textCurrentEntry = ""
 			p.level = 0
 			fallthrough

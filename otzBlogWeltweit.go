@@ -57,7 +57,7 @@ func ladeBlogWW(lastUpdate *int64, p *parseStateWW, i int, e *goquery.Selection)
 		}
 		zeitpunkt := monday.Format(p.timeCurrentEntry, "2. January 15:04 Uhr", "de_DE")
 		if p.f {
-			p.entries = append(p.entries, fmt.Sprintf("%s\n%s", zeitpunkt, p.textCurrentEntry))
+			p.entries = append(p.entries, fmt.Sprintf("%s - OTZ WW\n%s", zeitpunkt, p.textCurrentEntry))
 		} else {
 			p.f = true
 		}
