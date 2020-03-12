@@ -89,5 +89,6 @@ func otzBlogWeltweit(lastUpdate *int64) {
 			sendSignal(p.entries[len(p.entries)-i-1])
 		}
 	})
-	c.Visit("https://www.otz.de/leben/vermischtes/coronavirus-news-italien-norden-abgeriegelt-mailand-und-venedig-betroffen-id228637475.html")
+	// c.Visit("https://www.otz.de/leben/vermischtes/coronavirus-news-italien-norden-abgeriegelt-mailand-und-venedig-betroffen-id228637475.html")
+	c.Visit("https://www.otz.de/leben/vermischtes/coronavirus-corona-news-live-ticker-1715-bestaetigte-faelle-deutschland-merkel-lufthansa-id228668569.html")
 }
